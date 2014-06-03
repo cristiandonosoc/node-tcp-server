@@ -1,4 +1,6 @@
 var net = require('net');
+var fs = require('fs');
+var encoder = new require('node-html-encoder').Encoder();
 
 var server = net.createServer(function(c) { // Connection Socket Object
   console.log('Server Connected');
@@ -26,27 +28,54 @@ var server = net.createServer(function(c) { // Connection Socket Object
 
     // Now that we received the input,
     // we send the output
-    var http_version = 'HTTP/1.1';
-    var status_code = '200';
-    var reason_phrase = 'OK';
+    var httpVersion = 'HTTP/1.1';
+    var statusCode = '200';
+    var reasonPhrase = 'OK';
     var CRLF = '\r\n';
 
     var responseArray = [];
-    responseArray.push(http_version);
-    responseArray.push(status_code);
-    responseArray.push(reason_phrase);
+    responseArray.push(httpVersion);
+    responseArray.push(statusCode);
+    responseArray.push(reasonPhrase);
     responseArray.push(CRLF);
-    var response_head = responseArray.join(' ') + CRLF;
-    var response_body = '<h1>Hola!</h1>';
-    var response = response_head + response_body;
 
+    // HEADERS
+    var responseHeaders = responseArray.join(' ') + CRLF;
+
+    // <HEAD>
+    var responseHead = '<!DOCTYPE html><html><head>' +
+      '<script type="text/javascript">' +
+        fs.readFileSync('js/shCore.js') +
+      '</script>' +
+      '<script type="text/javascript">' +
+        fs.readFileSync('js/shBrushJScript.js') +
+      '</script>' +
+      '<style type="text/css">' +
+        fs.readFileSync('css/shCore.css') +
+      '</style>' +
+      '<style type="text/css">' +
+        fs.readFileSync('css/shThemeDefault.css') +
+      '</style>' +
+    '</head>';
+
+    // <BODY>
+    var responseBody = '<body onload="SyntaxHighlighter.highlight();">';
+    responseBody += '<h1>Hola Wooo!</h1>';
+    var fileData = fs.readFileSync('server.js');
+    responseBody += '<pre class="brush: js;">' +
+      encoder.htmlEncode(fileData.toString()) +
+    '</pre>';
+    responseBody += '</body></html>';
+
+    // The complete response
+    var response = responseHead + responseBody;
+
+    // We send the response
     c.write(response, 'utf8', function() {
       console.log('Wrote to Client');
       console.log(response);
       c.end();
     });
-
-
   });
 
   c.on('end', function() {

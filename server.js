@@ -56,6 +56,7 @@ var server = net.createServer(function(c) { // Connection Socket Object
       '<style type="text/css">' +
         fs.readFileSync('css/shThemeDefault.css') +
       '</style>' +
+      '<title>NSHS</title>' +
     '</head>';
 
     // <BODY>
